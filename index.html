@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="A visual guide for QA teams running existing automation tests safely against Disaster Recovery (DR) environments, locally and in Azure DevOps." />
+  <meta name="color-scheme" content="dark" />
+  <title>DR Automation — A Visual Guide for Product Teams</title>
+  <style>
+    :root { --bg:#081020; --panel:#101b30; --panel2:#14223a; --line:#2a3951; --text:#f1f7ff; --muted:#a1b2c9; --sub:#7790aa; --cyan:#56d9ee; --cyan2:#1a9bb5; --lime:#a6eb9d; --gold:#ffd18b; --red:#ff9994; --blue:#8aaaff; --radius:20px; --radius2:13px; --max:1170px; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; scroll-padding-top:95px; }
+    body { margin:0; min-width:320px; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; font-size:15px; line-height:1.65; }
+    body::before { position:fixed; z-index:-1; pointer-events:none; inset:0; content:""; background:radial-gradient(ellipse 620px 520px at 78% -12%,rgba(28,134,165,.17),transparent 70%),radial-gradient(ellipse 540px 490px at -10% 32%,rgba(46,68,137,.12),transparent 65%); }
+    button, code { font:inherit; }
+    button { cursor:pointer; }
+    a { color:inherit; }
+    :focus-visible { outline:2px solid var(--cyan); outline-offset:4px; }
+    ::selection { background:rgba(86,217,238,.25); }
+    .reading { position:fixed; z-index:100; top:0; left:0; width:0; height:3px; background:linear-gradient(90deg,var(--cyan),var(--lime)); }
+    .wrap { width:min(var(--max),calc(100% - 64px)); margin:0 auto; }
+    .topbar { position:sticky; top:0; z-index:50; border-bottom:1px solid rgba(134,168,205,.13); background:rgba(8,16,32,.89); backdrop-filter:blur(20px); }
+    .nav { min-height:70px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; font-weight:800; white-space:nowrap; letter-spacing:-.04em; font-size:16px; }
+    .brand-mark { display:grid; place-items:center; height:34px; width:34px; background:var(--cyan); color:#07111d; border-radius:10px; font-weight:900; font-size:13px; letter-spacing:-.08em; }
+    .brand span:last-child { color:var(--muted); font-weight:450; letter-spacing:-.02em; }
+    .navlinks { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+    .navlinks a { color:var(--muted); padding:8px 11px; font-size:13px; text-decoration:none; border-radius:9px; transition:background .18s,color .18s; }
+    .navlinks a:hover, .navlinks a:focus-visible { color:var(--text); background:#1a2941; }
+    .mini-share { text-decoration:none; background:rgba(86,217,238,.09); color:var(--cyan); border:1px solid rgba(86,217,238,.27); padding:7px 13px; border-radius:10px; font-size:12px; font-weight:750; }
+    .hero { position:relative; padding:85px 0 48px; }
+    .kicker { display:inline-flex; align-items:center; gap:9px; color:var(--cyan); font-weight:800; letter-spacing:.15em; text-transform:uppercase; font-size:11px; }
+    .dot { height:7px; width:7px; display:inline-block; border-radius:50%; background:currentColor; box-shadow:0 0 0 4px rgba(86,217,238,.12); }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { margin:19px 0 20px; font-weight:850; font-size:clamp(43px,6.4vw,78px); line-height:1.06; letter-spacing:-.065em; max-width:880px; }
+    h1 .accent { color:var(--cyan); }
+    .lede { color:#b7c8db; font-size:clamp(16px,1.9vw,19px); max-width:750px; line-height:1.7; margin-bottom:25px; }
+    .meta { display:flex; flex-wrap:wrap; gap:14px 23px; font-size:12px; color:var(--sub); margin-bottom:43px; }
+    .meta b { color:var(--muted); font-weight:600; }
+    .hero-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:14px; }
+    .metric { padding:17px 22px; border:1px solid var(--line); border-radius:15px; background:linear-gradient(130deg,rgba(17,34,55,.85),rgba(12,25,43,.93)); }
+    .metric strong { font-size:21px; line-height:1.3; letter-spacing:-.04em; display:block; color:var(--text); }
+    .metric small { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+    .metric strong.cyan { color:var(--cyan); }
+    .metric strong.lime { color:var(--lime); }
+    .metric strong.gold { color:var(--gold); }
+    .diagram { background:linear-gradient(135deg,#12253a,#0c172b 85%); border:1px solid #314c65; border-radius:25px; padding:28px; position:relative; overflow:hidden; box-shadow:0 24px 78px rgba(0,0,0,.15); }
+    .diagram:before { position:absolute; content:""; pointer-events:none; width:310px; height:310px; right:-110px; top:-150px; background:radial-gradient(circle,rgba(86,217,238,.12),transparent 70%); }
+    .diagram-head { display:flex; flex-wrap:wrap; align-items:center; gap:12px; justify-content:space-between; margin-bottom:22px; }
+    .diagram-head h2 { margin:0; font-size:17px; letter-spacing:-.025em; }
+    .segmented { display:flex; background:rgba(3,10,22,.56); padding:4px; border:1px solid var(--line); border-radius:11px; gap:3px; }
+    .segmented button { border:0; background:transparent; color:var(--muted); padding:7px 11px; border-radius:7px; font-weight:700; font-size:12px; }
+    .segmented button[aria-pressed="true"] { background:#24435a; color:#f0faff; box-shadow:inset 0 0 0 1px #3b6275; }
+    .route-flow { display:grid; align-items:stretch; grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr) 52px minmax(0,1fr); gap:8px; }
+    .route-box { padding:21px 18px; min-width:0; background:rgba(9,20,37,.84); border:1px solid #38516a; border-radius:15px; min-height:150px; }
+    .route-box:last-child { border-color:rgba(166,235,157,.52); background:rgba(32,65,54,.24); }
+    .route-label { display:flex; gap:8px; align-items:center; text-transform:uppercase; font-weight:850; color:var(--sub); letter-spacing:.11em; font-size:10px; margin-bottom:17px; }
+    .route-label svg { width:17px; height:17px; stroke:currentColor; }
+    .route-value { display:block; font-weight:790; line-height:1.32; font-size:clamp(14px,1.6vw,19px); letter-spacing:-.035em; overflow-wrap:anywhere; }
+    .route-note { display:block; font-size:12px; margin-top:9px; color:var(--muted); }
+    .route-box:last-child .route-value { color:var(--lime); }
+    .route-arrow { display:grid; place-items:center; color:var(--cyan); position:relative; }
+    .route-arrow:before { content:""; height:1px; width:100%; top:50%; position:absolute; background:linear-gradient(90deg,transparent,var(--cyan),transparent); opacity:.55; }
+    .route-arrow span { z-index:1; display:grid; place-items:center; border:1px solid #356b7b; width:28px; height:28px; border-radius:50%; background:#0b2435; font-size:18px; line-height:1; }
+    .route-caption { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-top:17px; gap:10px; color:var(--muted); font-size:12px; }
+    .status { display:inline-flex; align-items:center; gap:7px; border:1px solid #44664f; border-radius:50px; background:rgba(119,201,132,.11); color:var(--lime); padding:4px 12px; font-size:11px; font-weight:750; }
+    .status.warning { border-color:#704945; color:var(--red); background:rgba(249,130,119,.09); }
+    .diagram.off .route-box:last-child { border-color:rgba(255,153,148,.5); background:rgba(85,37,45,.24); }
+    .diagram.off .route-box:last-child .route-value { color:var(--red); }
+    .diagram.off .route-arrow { color:var(--red); }
+    .section { padding:76px 0 0; }
+    .eyebrow { text-transform:uppercase; letter-spacing:.15em; font-weight:850; font-size:11px; color:var(--cyan); margin-bottom:11px; }
+    .section-title { font-size:clamp(29px,3.3vw,43px); letter-spacing:-.055em; line-height:1.15; margin-bottom:12px; }
+    .section-intro { color:var(--muted); max-width:760px; margin-bottom:29px; }
+    .demo-notice { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:23px; padding:12px 16px; border:1px solid rgba(138,170,255,.42); border-radius:13px; background:rgba(138,170,255,.1); color:#d4e0ff; font-size:12px; }
+    .demo-notice strong { letter-spacing:.09em; font-size:10px; color:#a4baff; }
+    .demo-notice span { flex:1; min-width:210px; }
+    .warning-strip { display:flex; gap:14px; padding:18px 20px; border:1px solid rgba(255,153,148,.34); border-radius:15px; background:rgba(131,64,62,.12); margin-top:15px; }
+    .warning-strip .wicon { flex:0 0 auto; color:var(--red); margin-top:2px; }
+    .warning-strip strong { color:#ffd4d1; display:block; margin-bottom:3px; }
+    .warning-strip p { margin:0; color:#c7aead; font-size:13px; }
+    .step-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; }
+    .step { position:relative; border:1px solid var(--line); background:linear-gradient(135deg,var(--panel),rgba(16,27,48,.5)); border-radius:18px; padding:24px; min-height:214px; }
+    .number { display:grid; place-items:center; height:33px; width:33px; color:#081320; font-weight:900; font-size:13px; border-radius:10px; background:var(--cyan); margin-bottom:20px; }
+    .step:nth-child(2) .number { background:var(--blue); }
+    .step:nth-child(3) .number { background:var(--lime); }
+    .step h3 { font-size:17px; letter-spacing:-.025em; margin-bottom:8px; }
+    .step p { margin:0; font-size:13px; color:var(--muted); }
+    .pill-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+    .pill { display:inline-flex; align-items:center; border:1px solid #344960; background:rgba(15,28,45,.8); color:#c0d2e7; font-weight:650; padding:4px 10px; font-size:11px; border-radius:30px; }
+    .split { display:grid; grid-template-columns:1.15fr .85fr; gap:18px; align-items:start; }
+    .panel { border:1px solid var(--line); border-radius:18px; background:var(--panel); overflow:hidden; }
+    .panel-inner { padding:23px; }
+    .panel h3 { font-size:18px; letter-spacing:-.035em; margin-bottom:8px; }
+    .panel p { color:var(--muted); font-size:13px; margin-bottom:0; }
+    .panel p + p { margin-top:12px; }
+    .code-shell { background:#060d19; border:1px solid #293e56; border-radius:13px; overflow:hidden; margin-top:16px; }
+    .code-top { background:#101e31; border-bottom:1px solid #243750; min-height:38px; display:flex; align-items:center; justify-content:space-between; gap:15px; padding:7px 12px 7px 15px; color:#92a9c2; font-size:11px; font-weight:800; letter-spacing:.035em; }
+    .copy { border:1px solid #37516b; background:#1b304a; border-radius:7px; color:#e6f4ff; font-size:11px; font-weight:800; padding:5px 9px; display:inline-flex; gap:6px; align-items:center; }
+    .copy:hover { background:#274561; }
+    .copy.copied { color:var(--lime); border-color:#588263; }
+    pre { margin:0; padding:18px 17px; color:#d5e5f6; font-size:12px; line-height:1.7; font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,Monaco,monospace; overflow:auto; tab-size:2; }
+    code.inline { background:#1a2d46; color:#9be0f2; border:1px solid #28415e; padding:2px 6px; border-radius:5px; white-space:nowrap; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.87em; }
+    .comment { color:#7896a3; }.str { color:#a6eb9d; }.keyword { color:#a2b9ff; }.fn { color:#75dcef; }
+    .micro { color:var(--sub); font-size:12px; line-height:1.6; margin-top:11px; }
+    .stack { display:grid; gap:12px; }
+    .stack-card { display:flex; gap:13px; border:1px solid var(--line); background:#101d31; border-radius:13px; padding:17px; }
+    .stack-icon { flex:0 0 auto; height:31px; width:31px; border-radius:9px; display:grid; place-items:center; font-weight:850; font-size:14px; background:rgba(86,217,238,.1); color:var(--cyan); }
+    .stack-card:nth-child(2) .stack-icon { color:var(--blue); background:rgba(138,170,255,.1); }
+    .stack-card:nth-child(3) .stack-icon { color:var(--gold); background:rgba(255,209,139,.1); }
+    .stack-card h4 { margin:0 0 3px; font-size:14px; }
+    .stack-card p { margin:0; font-size:12px; color:var(--muted); }
+    .tabbar { display:flex; gap:7px; border-bottom:1px solid var(--line); padding:0 20px; overflow:auto; }
+    .tabbar button { flex:0 0 auto; border:0; padding:13px 12px; background:none; color:var(--muted); font-weight:750; font-size:12px; border-bottom:2px solid transparent; }
+    .tabbar button[aria-selected="true"] { color:var(--cyan); border-color:var(--cyan); }
+    .tab-panel[hidden] { display:none; }
+    .sample { border-left:3px solid var(--lime); margin-top:14px; padding:11px 14px; background:rgba(50,86,67,.14); border-radius:0 9px 9px 0; color:#d7e8d7; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; }
+    .sample span { color:var(--lime); font-weight:800; }
+    .divider { margin:23px 0; border:0; height:1px; background:var(--line); }
+    .run-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    .command-card { background:#0d192b; border:1px solid #2b3e55; padding:17px; border-radius:14px; min-width:0; }
+    .command-card h4 { margin:0 0 8px; font-size:13px; }
+    .command-card p { color:var(--muted); font-size:12px; margin:0 0 7px; }
+    .command-card .code-shell { margin-top:10px; }
+    .command-card pre { font-size:11px; padding:12px; }
+    .coverage { display:grid; gap:10px; margin-top:17px; }
+    .coverage-row { display:grid; grid-template-columns:115px 1fr auto; align-items:center; gap:13px; font-size:12px; }
+    .coverage-row span:first-child { color:#dde9f6; font-weight:700; }
+    .coverage-row small { color:var(--muted); text-align:right; }
+    .track { height:8px; border-radius:10px; background:#26354b; overflow:hidden; }
+    .track i { display:block; height:100%; border-radius:10px; background:var(--cyan); }
+    .coverage-row:nth-child(2) .track i { background:var(--blue); }
+    .coverage-row:nth-child(3) .track i { background:var(--gold); }
+    .route-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    .route-plan { padding:21px; border:1px solid #34445c; border-radius:16px; background:#101d31; }
+    .route-plan h3 { margin:0 0 15px; font-size:16px; }
+    .route-plan .timeline { border-left:1px dashed #4a6b85; padding-left:19px; margin-left:9px; display:grid; gap:17px; }
+    .timeline-line { position:relative; }
+    .timeline-line::before { content:""; position:absolute; left:-25px; top:4px; height:11px; width:11px; border-radius:50%; border:2px solid var(--cyan); background:var(--bg); }
+    .route-plan:last-child .timeline-line::before { border-color:var(--blue); }
+    .timeline-line b { display:block; font-size:13px; }
+    .timeline-line span { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+    .verify-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; margin-top:17px; }
+    .verify-tile { border:1px solid #36536b; border-radius:14px; padding:19px; background:linear-gradient(150deg,#11253b,#0d1a2d); }
+    .verify-tile .symbol { color:var(--cyan); font-weight:900; font-size:23px; margin-bottom:10px; }
+    .verify-tile h3 { font-size:14px; margin:0 0 5px; }
+    .verify-tile p { margin:0; color:var(--muted); font-size:12px; }
+    .safety-layout { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .safety-card { display:flex; gap:12px; padding:17px; border:1px solid var(--line); background:#111d31; border-radius:13px; }
+    .safety-card .check { color:var(--lime); font-size:18px; line-height:1; font-weight:850; }
+    .safety-card strong { display:block; font-size:13px; margin-bottom:4px; }
+    .safety-card span { font-size:12px; color:var(--muted); }
+    .reference { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:22px; background:linear-gradient(100deg,rgba(37,84,105,.23),rgba(24,43,70,.45)); border:1px solid rgba(86,217,238,.32); border-radius:16px; }
+    .reference strong { display:block; font-size:15px; }
+    .reference p { color:var(--muted); font-size:12px; margin:4px 0 0; }
+    .reference .repo { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; color:var(--cyan); overflow-wrap:anywhere; }
+    .frameworks { display:flex; gap:9px; flex-wrap:wrap; margin-top:20px; }
+    .frameworks span { background:#152740; border:1px solid #334d68; padding:8px 11px; border-radius:10px; color:#bfcede; font-size:12px; font-weight:700; }
+    details { border:1px solid var(--line); background:#101c2e; border-radius:12px; overflow:hidden; margin-top:9px; }
+    summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:15px; padding:15px 17px; font-size:13px; font-weight:720; }
+    summary::-webkit-details-marker { display:none; }
+    summary:after { content:"+"; font-size:20px; color:var(--cyan); line-height:1; }
+    details[open] summary:after { content:"−"; }
+    details p { padding:0 17px 16px; margin:0; font-size:13px; color:var(--muted); }
+    .footer { margin-top:77px; border-top:1px solid var(--line); padding:32px 0 55px; display:flex; gap:20px; justify-content:space-between; align-items:center; flex-wrap:wrap; color:var(--sub); font-size:12px; }
+    .footer b { color:#d1e3f4; }
+    .footer a { color:var(--cyan); text-decoration:none; }
+    @media (max-width:960px) { .navlinks a:nth-child(2),.navlinks a:nth-child(4) {display:none;} .route-flow {grid-template-columns:1fr 36px 1fr 36px 1fr; gap:4px;} .route-box { padding:17px 13px; } .split { grid-template-columns:1fr; } }
+    @media (max-width:720px) { .wrap {width:min(var(--max),calc(100% - 34px));} .nav {min-height:63px;} .navlinks {display:none;} .hero {padding:62px 0 36px;} .hero-metrics {grid-template-columns:1fr 1fr;} .hero-metrics .metric:last-child {grid-column:1/-1;} .diagram {padding:20px;} .route-flow { grid-template-columns:1fr; gap:7px; } .route-box { min-height:0; } .route-label {margin-bottom:6px;} .route-arrow {height:30px; transform:rotate(90deg); } .route-arrow:before {width:30px;} .section {padding-top:62px;} .step-grid,.verify-grid {grid-template-columns:1fr;} .step {min-height:0;} .run-grid,.route-grid,.safety-layout {grid-template-columns:1fr;} .coverage-row {grid-template-columns:100px 1fr; } .coverage-row small {grid-column:2; text-align:left;} }
+    @media (max-width:440px) { .hero-metrics {grid-template-columns:1fr;} .hero-metrics .metric:last-child {grid-column:auto;} .brand span:last-child {display:none;} .section-title {font-size:29px;} .code-top {font-size:10px;} }
+    @media (prefers-reduced-motion:reduce) { html {scroll-behavior:auto;} * {scroll-behavior:auto!important; transition:none!important; animation:none!important;} }
+    @media print { :root {--bg:#fff;--text:#102138;--muted:#345;--sub:#456;--line:#b7c9d7;--panel:#f6f9fc;--cyan:#006c86;--lime:#146538} body {background:white;color:var(--text)} body::before,.topbar,.reading,.segmented,.copy,.mini-share {display:none!important;} .hero {padding-top:10px;} .diagram,.panel,.step,.metric,.route-plan,.safety-card,.verify-tile {background:white!important;box-shadow:none!important;break-inside:avoid} .route-box,.code-shell,.route-plan,.stack-card {background:#eef5f8!important;color:#102138!important;} pre {white-space:pre-wrap;color:#102138!important;} .section {padding-top:26px;} .tab-panel[hidden]{display:block!important;} .footer{padding-bottom:8px;} }
+  </style>
+</head>
+<body>
+  <div class="reading" id="reading" aria-hidden="true"></div>
+  <header class="topbar">
+    <nav class="wrap nav" aria-label="Main navigation">
+      <a class="brand" href="#top" aria-label="Back to top"><span class="brand-mark">DR</span> AUTOMATION <span>/ Field guide</span></a>
+      <div class="navlinks"><a href="#how">How it works</a><a href="#setup">Setup</a><a href="#local">Local run</a><a href="#pipeline">Pipeline</a><a href="#verify">Verification</a><a href="#safety">Safety</a></div>
+      <a class="mini-share" href="#reference">Reference ↗</a>
+    </nav>
+  </header>
+  <main id="top">
+    <section class="hero wrap">
+      <div class="demo-notice" role="note"><strong>PUBLIC DEMO · FICTIONAL DETAILS</strong><span>All domains and IP addresses below are documentation-only examples. Replace them with your approved environment values before running commands.</span></div>
+      <div class="kicker"><span class="dot"></span> DISASTER RECOVERY · AUTOMATION PLAYBOOK</div>
+      <h1>Same URL.<br/><span class="accent">Different destination.</span></h1>
+      <p class="lede">Run your existing automation tests against <strong>DR instead of Production</strong> — locally or in Azure DevOps — without rewriting your tests or changing application URLs.</p>
+      <div class="meta"><span><b>For</b> QA &amp; Product Teams</span><span><b>By</b> Ahmed Salah</span><span><b>Updated</b> 20 Oct 2026</span></div>
+      <div class="hero-metrics" aria-label="Key facts">
+        <div class="metric"><strong class="cyan">Same URLs</strong><small>No changes to test URLs or locators</small></div>
+        <div class="metric"><strong class="lime">DR routing</strong><small>Production hostname → DR IP</small></div>
+        <div class="metric"><strong class="gold">Verify IP</strong><small>Passing tests alone aren't enough</small></div>
+      </div>
+      <div class="diagram" id="diagram" aria-label="Conceptual routing diagram">
+        <div class="diagram-head">
+          <h2>See where your test actually goes</h2>
+          <div class="segmented" role="group" aria-label="Conceptual routing scenario">
+            <button type="button" id="drEnabled" aria-pressed="true">DR enabled</button>
+            <button type="button" id="drDisabled" aria-pressed="false">No routing</button>
+          </div>
+        </div>
+        <div class="route-flow">
+          <div class="route-box"><div class="route-label"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg> 01 / Test URL</div><strong class="route-value">https://portal.example.com</strong><span class="route-note">Unchanged in your tests</span></div>
+          <div class="route-arrow" aria-hidden="true"><span>→</span></div>
+          <div class="route-box"><div class="route-label"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg> 02 / Resolution</div><strong class="route-value" id="resolverName">DR host mapping</strong><span class="route-note" id="resolverDesc">Chromium launch configuration</span></div>
+          <div class="route-arrow" aria-hidden="true"><span>→</span></div>
+          <div class="route-box"><div class="route-label"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h3"/></svg> 03 / Destination</div><strong class="route-value" id="destination">203.0.113.10</strong><span class="route-note" id="destinationDesc">DR server · port 443</span></div>
+        </div>
+        <div class="route-caption"><span id="routeExplanation">Chromium keeps the HTTPS hostname, but connects to DR.</span><span class="status" id="routeStatus">● DR destination</span></div>
+        <div class="micro">Illustrative routing with reserved example.com and documentation IP addresses. The switch does not change network settings or send requests.</div>
+      </div>
+      <div class="warning-strip"><span class="wicon" aria-hidden="true">⚠</span><div><strong>The critical risk: false confidence</strong><p>Without routing, a test can pass while hitting <b>Production</b>. Always verify the server IP rather than trusting the test result alone.</p></div></div>
+    </section>
+
+    <section class="section wrap" id="how">
+      <div class="eyebrow">01 / The big picture</div><h2 class="section-title">Three steps to a safe DR run.</h2><p class="section-intro">Keep the application URLs as they are. Only change where the names resolve <em>inside the test execution</em>.</p>
+      <div class="step-grid">
+        <article class="step"><span class="number">01</span><h3>Get the DR mappings</h3><p>Request the DR IP for every hostname your tests use. Confirm access, accounts and approved actions with the DR owners.</p><div class="pill-row"><span class="pill">Hostname</span><span class="pill">DR IP</span><span class="pill">Port 443</span></div></article>
+        <article class="step"><span class="number">02</span><h3>Configure both paths</h3><p>Route Chromium browser requests <strong>and</strong> Node/API requests. Cover global setup if it makes network calls.</p><div class="pill-row"><span class="pill">Browser</span><span class="pill">API</span><span class="pill">Setup</span></div></article>
+        <article class="step"><span class="number">03</span><h3>Run &amp; verify</h3><p>Execute the DR project, confirm actual destination IPs and block any unlisted Production hostname.</p><div class="pill-row"><span class="pill">Local</span><span class="pill">Pipeline</span><span class="pill">No fallback</span></div></article>
+      </div>
+    </section>
+
+    <section class="section wrap" id="setup">
+      <div class="eyebrow">02 / Playwright setup</div><h2 class="section-title">What makes <code class="inline">--project=dr</code> work?</h2><p class="section-intro">The CLI option <strong>selects a Playwright project</strong>. The project and its supporting fixtures do the routing. The command itself doesn't know any DR IPs.</p>
+      <div class="split">
+        <div class="panel"><div class="panel-inner"><h3>Template: <code class="inline">playwright.config.ts</code></h3><p>Configure the Chromium browser to resolve the Production hostname to the DR server. The original <code class="inline">baseURL</code> stays unchanged.</p>
+          <div class="code-shell"><div class="code-top"><span>TYPESCRIPT · FICTIONAL EXAMPLE — REPLACE VALUES</span><button class="copy" type="button" data-copy="config-code">Copy</button></div>
+<pre id="config-code"><code>import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  projects: [{
+    name: 'dr',
+    use: {
+      ...devices['Desktop Chrome'],
+      baseURL: 'https://portal.example.com',
+      launchOptions: {
+        args: [
+          '--host-resolver-rules=' +
+          'MAP portal.example.com 203.0.113.10, ' +
+          'MAP api.example.org 198.51.100.20, ' +
+          'MAP *.example.com ~NOTFOUND, ' +
+          'MAP example.com ~NOTFOUND, ' +
+          'MAP *.example.org ~NOTFOUND, ' +
+          'MAP example.org ~NOTFOUND'
+        ]
+      }
+    }
+  }]
+});</code></pre></div>
+          <p class="micro"><strong>Important:</strong> These are fictional demonstration mappings, not runnable DR destinations or a complete implementation. Before using this snippet, replace every example hostname/IP and the protected-domain rules with values approved for your own product; implement Node/API and global-setup routing separately. Do not replace your existing projects when integrating.</p>
+        </div></div>
+        <div class="stack"><div class="stack-card"><span class="stack-icon">B</span><div><h4>Browser: Chromium routing</h4><p><code class="inline">--host-resolver-rules</code> maps allowed hosts to DR IPs, with a fail-closed rule for unlisted Production hosts.</p></div></div><div class="stack-card"><span class="stack-icon">N</span><div><h4>Node.js / API traffic</h4><p>Use a DR-aware fixture or equivalent routing for Playwright <code class="inline">request</code>, <code class="inline">page.request</code> and other Node HTTP clients. Browser flags don't cover them.</p></div></div><div class="stack-card"><span class="stack-icon">G</span><div><h4>Global setup</h4><p>If your <code class="inline">globalSetup</code> signs in or calls services, install the same Node routing there — it's a separate process.</p></div></div><div class="panel"><div class="panel-inner"><h3>Example host mappings · fictional</h3><p><strong><code class="inline">portal.example.com</code></strong><br>Example DR IP: <strong style="color:var(--cyan)">203.0.113.10</strong></p><p><strong><code class="inline">api.example.org</code></strong><br>Example DR IP: <strong style="color:var(--cyan)">198.51.100.20</strong></p><p class="micro">Both IPs are reserved for documentation and do not represent reachable DR servers. Request your product's approved host-to-IP mapping from Infrastructure and explicitly list each hostname.</p></div></div></div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="local">
+      <div class="eyebrow">03 / Run on your machine</div><h2 class="section-title">Try the routing. Then run the tests.</h2><p class="section-intro">After substituting real, approved values, first verify your hostname can connect to its DR IP. Then run the configured Playwright project.</p>
+      <div class="panel"><div class="tabbar" role="tablist" aria-label="Local terminal operating system"><button type="button" id="cmdTab" role="tab" aria-selected="true" aria-controls="cmdPanel">Windows CMD</button><button type="button" id="unixTab" role="tab" aria-selected="false" aria-controls="unixPanel">macOS / Linux</button></div>
+        <div class="panel-inner"><h3>Quick network proof with curl</h3><p><code class="inline">--resolve</code> applies only to this curl request. It keeps the hostname and HTTPS certificate validation while using the specified DR IP.</p>
+          <div id="cmdPanel" role="tabpanel" aria-labelledby="cmdTab" class="tab-panel"><div class="code-shell"><div class="code-top"><span>WINDOWS CMD · REPLACE SAMPLE HOST/IP</span><button type="button" class="copy" data-copy="curl-win">Copy</button></div><pre id="curl-win"><code>curl.exe --noproxy "*" --resolve portal.example.com:443:203.0.113.10 -sS -o NUL -w "HTTP: %{http_code} | Server IP: %{remote_ip}\n" https://portal.example.com/</code></pre></div></div>
+          <div id="unixPanel" role="tabpanel" aria-labelledby="unixTab" class="tab-panel" hidden><div class="code-shell"><div class="code-top"><span>MACOS / LINUX · REPLACE SAMPLE HOST/IP</span><button type="button" class="copy" data-copy="curl-unix">Copy</button></div><pre id="curl-unix"><code>curl --noproxy '*' --resolve portal.example.com:443:203.0.113.10 -sS -o /dev/null -w 'HTTP: %{http_code} | Server IP: %{remote_ip}\n' https://portal.example.com/</code></pre></div></div>
+          <div class="sample" aria-label="Illustrative response">Illustrative output <em>(not a real response)</em>: HTTP: 200 | Server IP: <span>203.0.113.10</span></div><div class="micro"><strong>Replace the fictional hostname and IP before running this command.</strong> A 2xx/3xx response is common for a healthy endpoint, but other status codes may occur because of authentication or WAF rules. The key routing evidence is <b>remote_ip</b>. No TLS-verification bypass is used.</div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="panel"><div class="panel-inner"><h3>Run Playwright against DR</h3><p>Execute from your automation repository after replacing the sample values with real, approved DR mappings and completing the routing setup.</p>
+        <div class="run-grid">
+          <div class="command-card"><h4>Recommended · Read-only</h4><p>Exclude tests explicitly tagged <code class="inline">@writes</code>.</p><div class="code-shell"><div class="code-top">SHELL <button class="copy" type="button" data-copy="run-safe">Copy</button></div><pre id="run-safe">npx playwright test --project=dr --grep-invert "@writes"</pre></div></div>
+          <div class="command-card"><h4>Smoke tests</h4><p>Run only tests with the smoke tag.</p><div class="code-shell"><div class="code-top">SHELL <button class="copy" type="button" data-copy="run-smoke">Copy</button></div><pre id="run-smoke">npx playwright test --project=dr --grep "@smoke"</pre></div></div>
+          <div class="command-card"><h4>Visible browser</h4><p>Useful for observing the DR execution.</p><div class="code-shell"><div class="code-top">SHELL <button class="copy" type="button" data-copy="run-headed">Copy</button></div><pre id="run-headed">npx playwright test --project=dr --headed</pre></div></div>
+          <div class="command-card"><h4>Entire DR suite · Approval required for writes</h4><p>Runs all selected tests, including any write tests.</p><div class="code-shell"><div class="code-top">SHELL <button class="copy" type="button" data-copy="run-all">Copy</button></div><pre id="run-all">npx playwright test --project=dr</pre></div></div>
+        </div><p class="micro">Tag data-changing tests consistently. An untagged write test will not be excluded by <code class="inline">--grep-invert "@writes"</code>. For account conflicts, consider <code class="inline">--workers=1</code>.</p>
+      </div></div>
+    </section>
+
+    <section class="section wrap" id="pipeline">
+      <div class="eyebrow">04 / Azure DevOps</div><h2 class="section-title">One configuration. Two ways to run.</h2><p class="section-intro">Use the same routing strategy when tests execute on an Azure DevOps agent. DR is an environment selection — not a separate test suite.</p>
+      <div class="route-grid"><div class="route-plan"><h3>Local execution</h3><div class="timeline"><div class="timeline-line"><b>Developer laptop</b><span>Network access to the DR host</span></div><div class="timeline-line"><b>Playwright DR project</b><span>Chromium + Node/API routing</span></div><div class="timeline-line"><b>DR server</b><span>Verify response destination IP</span></div></div></div><div class="route-plan"><h3>Azure Pipeline execution</h3><div class="timeline"><div class="timeline-line"><b>Environment = DR</b><span>Choose the DR pipeline option</span></div><div class="timeline-line"><b>Pipeline agent</b><span>Preflight network check, same mapping</span></div><div class="timeline-line"><b>DR server + artifacts</b><span>Execute tests and publish evidence</span></div></div></div></div>
+      <div class="panel" style="margin-top:16px"><div class="panel-inner"><h3>Sample Azure Pipelines steps</h3><p>Template only: replace the fictional IPs before execution. Assumes the pipeline has an <code class="inline">environment</code> parameter and runs on a Linux agent with <code class="inline">nc</code> installed.</p><div class="code-shell"><div class="code-top"><span>AZURE-PIPELINES.YML · TEMPLATE — REPLACE IPS</span><button type="button" class="copy" data-copy="pipeline-code">Copy</button></div><pre id="pipeline-code"><code>- bash: |
+    for ip in 203.0.113.10 198.51.100.20; do
+      nc -z -w 10 "$ip" 443 || exit 1
+    done
+  displayName: DR reachability check
+  condition: eq('${{ parameters.environment }}', 'DR')
+
+- bash: npx playwright test --project=dr --workers=1 --grep-invert "@writes"
+  displayName: Run read-only tests on DR
+  condition: eq('${{ parameters.environment }}', 'DR')</code></pre></div><p class="micro">The listed IPs are reserved documentation examples, not real agent destinations. For your product, confirm agent-to-DR access independently. Use secured credentials and publish test/report artifacts.</p></div></div>
+    </section>
+
+    <section class="section wrap" id="verify">
+      <div class="eyebrow">05 / Evidence, not assumptions</div><h2 class="section-title">Prove the destination is DR.</h2><p class="section-intro">Treat the destination IP as part of the test evidence. A green test result alone cannot tell you whether a request was sent to DR.</p>
+      <div class="verify-grid"><div class="verify-tile"><div class="symbol">01</div><h3>Before the run</h3><p><code class="inline">curl --resolve</code> confirms the local path to the DR IP and returns the remote IP.</p></div><div class="verify-tile"><div class="symbol">02</div><h3>During the run</h3><p>Use <code class="inline">response.serverAddr()</code> in Chromium and compare its IP with the expected DR host mapping.</p></div><div class="verify-tile"><div class="symbol">03</div><h3>Across all traffic</h3><p>Validate relevant browser, API and setup traffic; fail tests on unmapped Production hosts or unexpected IPs.</p></div></div>
+      <div class="split" style="margin-top:16px"><div class="panel"><div class="panel-inner"><h3>Example Playwright check</h3><div class="code-shell"><div class="code-top"><span>TYPESCRIPT · FICTIONAL HOST/IP</span><button type="button" class="copy" data-copy="verify-code">Copy</button></div><pre id="verify-code"><code>import { test, expect } from './fixtures';
+
+test('Routes browser navigation to DR', async ({ page }) => {
+  const response = await page.goto('https://portal.example.com');
+  expect(response).not.toBeNull();
+
+  const server = await response!.serverAddr();
+  expect(server?.ipAddress?.replace(/^::ffff:/, ''))
+    .toBe('203.0.113.10');
+});</code></pre></div><p class="micro">The test assumes the DR-aware fixture is available at <code class="inline">./fixtures</code>. Adjust the import to your project structure. The hostname and IP are fictional; replace both before running. This checks one browser response, not the entire request graph; proxies may also affect the observed remote address.</p></div></div>
+      <div class="panel"><div class="panel-inner"><h3>Verify all three paths</h3><p>Routing must apply to every network-originating part of the test framework, not only the visible web page.</p><div class="coverage"><div class="coverage-row"><span>Browser</span><div class="track"><i style="width:100%"></i></div><small>Chromium rules</small></div><div class="coverage-row"><span>Node / API</span><div class="track"><i style="width:100%"></i></div><small>Worker fixture</small></div><div class="coverage-row"><span>Global setup</span><div class="track"><i style="width:100%"></i></div><small>Own process</small></div></div><p class="micro">Bars show the three <b>required routing areas</b>, not actual test coverage measurements.</p><hr class="divider"><h3>Manual browser check</h3><p>Open DevTools → Network → select a request → inspect <b>Remote Address</b>. Compare it with Infrastructure's DR IP for that hostname.</p></div></div></div>
+    </section>
+
+    <section class="section wrap" id="safety">
+      <div class="eyebrow">06 / Guardrails</div><h2 class="section-title">DR should be treated like Production.</h2><p class="section-intro">It can contain real customer records and live integrations. Routing correctly is only half of a safe test run.</p>
+      <div class="safety-layout"><div class="safety-card"><div class="check">✓</div><div><strong>Default to read-only</strong><span>Tag data-changing tests as <code class="inline">@writes</code> and exclude them by default.</span></div></div><div class="safety-card"><div class="check">✓</div><div><strong>Never edit the hosts file</strong><span>Keep mappings inside the test execution. Do not change laptop or shared agent DNS globally.</span></div></div><div class="safety-card"><div class="check">✓</div><div><strong>Block Production fallback</strong><span>Unlisted protected hosts must fail rather than silently resolving to live Production.</span></div></div><div class="safety-card"><div class="check">✓</div><div><strong>Get write approvals</strong><span>Purchases, issuance, payments, cancellation, notifications and deletion require DR-owner agreement.</span></div></div><div class="safety-card"><div class="check">✓</div><div><strong>Confirm external services</strong><span>SMS, email, payment and government integrations may still be live. Verify before triggering.</span></div></div><div class="safety-card"><div class="check">✓</div><div><strong>Record created data</strong><span>Keep a record of every test-created entity and share it with the DR owners.</span></div></div></div>
+      <h3 style="margin:35px 0 10px; font-size:18px; letter-spacing:-.03em">Troubleshooting — common symptoms</h3>
+      <details><summary>Tests pass, but the server IP is a Production IP</summary><p>Routing may cover the browser but not Node/API requests, or a proxy may resolve names independently. Check all execution paths and inspect proxy settings. Do not trust passing tests until routing is verified.</p></details>
+      <details><summary>Timeout when connecting to DR</summary><p>Verify network reachability from the specific laptop or pipeline agent. Give Infrastructure the source IP, destination DR IP and port 443.</p></details>
+      <details><summary>ERR_NAME_NOT_RESOLVED or hostname missing from mapping</summary><p>This can be the expected fail-closed guard. Request the missing host's DR IP, then add that exact hostname to the approved map.</p></details>
+      <details><summary>HTTP 500: “The URL you requested has been blocked”</summary><p>A WAF may reject automated browser user-agent strings. Use an appropriate browser user-agent if approved and troubleshoot with the DR/WAF owners.</p></details>
+      <details><summary>Certificate verification error</summary><p>Check the certificate chain and hostname with Infrastructure. Keep TLS verification enabled; don't bypass certificate errors just to get tests passing.</p></details>
+      <details><summary>HTTP 502 / 504 or very slow responses</summary><p>DR may be unavailable or capacity-constrained. Share timestamps, hostnames and timings with DR support.</p></details>
+    </section>
+
+    <section class="section wrap" id="reference">
+      <div class="eyebrow">07 / Reuse the approach</div><h2 class="section-title">Not using Playwright? Same idea.</h2><p class="section-intro">Use a per-run hostname-to-IP mapping supported by your test stack; retain the hostname in HTTPS requests and verify the destination.</p>
+      <div class="frameworks" aria-label="Other test frameworks"><span>Selenium / Chrome</span><span>Cypress / Chrome</span><span>Puppeteer</span><span>REST Assured / Java</span><span>pytest / requests</span><span>k6</span><span>JMeter</span><span>Postman / Newman in a container</span><span>curl --resolve</span></div>
+      <div class="reference" style="margin-top:25px"><div><strong>Reference implementation · generic</strong><p>Create or adapt a DR routing helper in your own automation repository. Supply your approved host mappings and fail-closed controls.</p></div><div class="repo">your-automation-repo<br/>utils/drRouting.ts</div></div>
+      <div class="warning-strip" style="margin-top:16px; border-color:#365c68; background:rgba(37,98,110,.1)"><span class="wicon" style="color:var(--cyan)" aria-hidden="true">↗</span><div><strong style="color:#c1f2fc">The takeaway</strong><p style="color:#b5cfdf">Don't rebuild the suite. Configure DR resolution, protect against Production fallback, verify actual destination IPs, then run your existing tests locally or from the pipeline.</p></div></div>
+    </section>
+  </main>
+  <footer class="wrap footer"><span><b>DR Automation</b> · Visual field guide for product teams</span><span>Prepared by Ahmed Salah · 20 October 2026</span><a href="#top">Back to top ↑</a></footer>
+  <script>
+    (function() {
+      const progress = document.getElementById('reading');
+      function trackScroll() {
+        const available = document.documentElement.scrollHeight - window.innerHeight;
+        progress.style.width = (available > 0 ? Math.max(0,Math.min(100,window.scrollY/available*100)) : 0) + '%';
+      }
+      window.addEventListener('scroll',trackScroll,{passive:true});
+      window.addEventListener('resize',trackScroll); trackScroll();
+      const diagram = document.getElementById('diagram');
+      const on = document.getElementById('drEnabled');
+      const off = document.getElementById('drDisabled');
+      function setRoute(enabled) {
+        diagram.classList.toggle('off',!enabled);
+        on.setAttribute('aria-pressed',String(enabled));
+        off.setAttribute('aria-pressed',String(!enabled));
+        document.getElementById('resolverName').textContent = enabled ? 'DR host mapping' : 'Normal DNS lookup';
+        document.getElementById('resolverDesc').textContent = enabled ? 'Chromium launch configuration' : 'No DR mapping configured';
+        document.getElementById('destination').textContent = enabled ? '203.0.113.10' : 'Production IP';
+        document.getElementById('destinationDesc').textContent = enabled ? 'DR server · port 443' : 'Production server · unsafe for DR testing';
+        document.getElementById('routeExplanation').textContent = enabled ? 'Chromium keeps the HTTPS hostname, but connects to DR.' : 'Same URL, different server. A passing test would not prove DR health.';
+        const s = document.getElementById('routeStatus');
+        s.textContent = enabled ? '● DR destination' : '● Production risk';
+        s.classList.toggle('warning',!enabled);
+      }
+      on.addEventListener('click',() => setRoute(true));
+      off.addEventListener('click',() => setRoute(false));
+      const tabs = [[document.getElementById('cmdTab'),document.getElementById('cmdPanel')],[document.getElementById('unixTab'),document.getElementById('unixPanel')]];
+      tabs.forEach(([tab],idx) => tab.addEventListener('click',() => tabs.forEach(([t,p],i) => { t.setAttribute('aria-selected',String(i===idx)); p.hidden=i!==idx; })));
+      async function copyText(value) {
+        if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(value); return; }
+        const ta=document.createElement('textarea'); ta.value=value; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); const result=document.execCommand('copy'); ta.remove(); if (!result) throw new Error('Copy unavailable');
+      }
+      document.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', async () => {
+        const source=document.getElementById(btn.getAttribute('data-copy'));
+        if (!source) return;
+        const value=source.textContent.replace(/\u00a0/g,' ').trim();
+        const old=btn.textContent;
+        try { await copyText(value); btn.textContent='✓ Copied'; btn.classList.add('copied'); }
+        catch(e) { btn.textContent='Select code to copy'; }
+        setTimeout(() => {btn.textContent=old;btn.classList.remove('copied');},2000);
+      }));
+    })();
+  </script>
+</body>
+</html>
